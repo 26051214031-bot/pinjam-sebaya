@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PinjamSebaya - Platform Sewa Barang Mahasiswa & Warga</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- FontAwesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* Custom Scrollbar & Utility */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    .badge-verified {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased">
+
+  <!-- TOP HEADER -->
+  <header class="sticky top-0 z-40 bg-white shadow-sm border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        
+        <!-- Logo -->
+        <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('explore')">
+          <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xl shadow-md shadow-indigo-200">
+            <i class="fa-solid fa-handshake"></i>
+          </div>
+          <div>
+            <span class="text-xl font-bold bg-gradient-to-r from-indigo-600 to-indigo-800 bg-clip-text text-transparent">PinjamSebaya</span>
+            <span class="block text-[10px] text-slate-400 -mt-1 font-medium">Platform Sewa Berbasis Lokasi</span>
+          </div>
+        </div>
+
+        <!-- Search Bar Desktop -->
+        <div class="hidden md:flex flex-1 max-w-md mx-8">
+          <div class="relative w-full">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Cari jas lab, bor listrik, proyektor..." class="w-full pl-10 pr-4 py-2 bg-slate-100 border border-slate-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all">
+          </div>
+        </div>
+
+        <!-- User Nav / Status -->
+        <div class="flex items-center gap-3">
+          <button onclick="toggleMapModal()" class="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition-colors">
+            <i class="fa-solid fa-location-dot text-indigo-600"></i>
+            <span class="hidden sm:inline">Peta Lokasi</span>
+          </button>
+          
+          <div class="h-6 w-[1px] bg-slate-200"></div>
+
+          <!-- Profile Badge -->
+          <div class="flex items-center gap-2 cursor-pointer" onclick="switchTab('profile')">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80" alt="Avatar User" class="w-8 h-8 rounded-full border-2 border-indigo-500 object-cover">
+            <div class="hidden lg:block text-left">
+              <span class="block text-xs font-bold text-slate-700 leading-none">Bintang R.</span>
+              <span class="inline-flex items-center gap-1 text-[9px] font-semibold text-emerald-600 mt-0.5">
+                <i class="fa-solid fa-circle-check"></i> KTP/KTM Valid
+              </span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- SEARCH MOBILE -->
+    <div class="mb-4 md:hidden">
+      <div class="relative w-full">
+        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+        <input type="text" id="searchInputMobile" oninput="handleSearchMobile()" placeholder="Cari barang terdekat..." class="w-full pl-10 pr-4 py-2 bg-slate-100 border border-slate-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white">
+      </div>
+    </div>
+
+    <!-- TABS NAV -->
+    <div class="flex items-center gap-2 border-b border-slate-200 mb-6 pb-2 overflow-x-auto">
+      <button id="tab-explore" onclick="switchTab('explore')" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-indigo-600 text-white shadow-sm">
+        <i class="fa-solid fa-compass mr-1.5"></i> Eksplor Barang
+      </button>
+      <button id="tab-rentals" onclick="switchTab('rentals')" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-all">
+        <i class="fa-solid fa-box-archive mr-1.5"></i> Pinjaman Saya <span id="activeCount" class="ml-1 px-1.5 py-0.5 text-[10px] bg-indigo-100 text-indigo-700 rounded-full font-bold">1</span>
+      </button>
+      <button id="tab-add" onclick="switchTab('add')" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-all">
+        <i class="fa-solid fa-circle-plus mr-1.5"></i> Sewakan Barang
+      </button>
+      <button id="tab-profile" onclick="switchTab('profile')" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-all">
+        <i class="fa-solid fa-user-shield mr-1.5"></i> Profil & Identitas
+      </button>
+    </div>
+
+    <!-- VIEW 1: EKSPLOR BARANG -->
+    <section id="view-explore" class="space-y-6">
+      <!-- Category Filter -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-2">
+        <button onclick="filterCategory('All')" class="cat-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700 border border-indigo-200 whitespace-nowrap">Semua Barang</button>
+        <button onclick="filterCategory('Alat Kuliah')" class="cat-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 whitespace-nowrap">🎓 Alat Kuliah</button>
+        <button onclick="filterCategory('Perkakas')" class="cat-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 whitespace-nowrap">🛠️ Perkakas Rumah</button>
+        <button onclick="filterCategory('Elektronik')" class="cat-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 whitespace-nowrap">📹 Elektronik & Media</button>
+      </div>
+
+      <!-- Banner Info -->
+      <div class="bg-gradient-to-r from-indigo-900 via-indigo-800 to-indigo-950 text-white rounded-2xl p-5 shadow-lg relative overflow-hidden flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="relative z-10 max-w-lg">
+          <span class="inline-block px-2.5 py-0.5 rounded-md bg-indigo-500/30 text-indigo-200 text-[11px] font-bold uppercase tracking-wider mb-2 border border-indigo-400/20">Hemat Hingga 80%</span>
+          <h2 class="text-xl sm:text-2xl font-bold leading-tight">Tak Perlu Beli Baru untuk Penggunaan Sekali Pakai</h2>
+          <p class="text-xs text-indigo-200 mt-1">Sewa alat praktek, perkakas, dan peralatan media langsung dari sesama mahasiswa & tetangga terdekat.</p>
+        </div>
+        <button onclick="toggleMapModal()" class="relative z-10 shrink-0 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md transition-all flex items-center gap-2">
+          <i class="fa-solid fa-map-marked-alt text-base"></i> Cari di Peta Sekitar
+        </button>
+        <!-- Background Overlay Pattern -->
+        <div class="absolute -right-10 -bottom-10 w-48 h-48 rounded-full bg-indigo-600/20 blur-2xl pointer-events-none"></div>
+      </div>
+
+      <!-- Items Grid -->
+      <div id="itemsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <!-- VIEW 2: PINJAMAN SAYA -->
+    <section id="view-rentals" class="hidden space-y-4">
+      <h3 class="text-lg font-bold text-slate-800">Transaksi & Pinjaman Aktif</h3>
+      <div id="activeRentalsList" class="space-y-3">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <!-- VIEW 3: SEWAKAN BARANG -->
+    <section id="view-add" class="hidden max-w-2xl mx-auto">
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-4">
+        <div>
+          <h3 class="text-lg font-bold text-slate-800">Tambahkan Barang untuk Disewakan</h3>
+          <p class="text-xs text-slate-500">Bantu mahasiswa lain sekaligus hasilkan uang sampingan dari barang yang jarang dipakai.</p>
+        </div>
+
+        <form onsubmit="handleAddItem(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Barang</label>
+            <input type="text" id="addItemTitle" required placeholder="Contoh: Bor Listrik Cordless 12V" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Kategori</label>
+              <select id="addItemCategory" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
+                <option value="Alat Kuliah">Alat Kuliah</option>
+                <option value="Perkakas">Perkakas</option>
+                <option value="Elektronik">Elektronik</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Harga Sewa / Hari (Rp)</label>
+              <input type="number" id="addItemPrice" required placeholder="25000" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Jarak / Area Lokasi</label>
+            <input type="text" id="addItemLocation" required placeholder="Contoh: Asrama Kampus Unesa Ketintang (0.3 km)" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">URL Foto Barang</label>
+            <input type="url" id="addItemImg" required placeholder="https://images.unsplash.com/..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            <span class="text-[10px] text-slate-400">Gunakan URL foto dari Unsplash atau link terbuka.</span>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Deskripsi & Kelengkapan</label>
+            <textarea id="addItemDesc" rows="3" required placeholder="Jelaskan kondisi barang dan kelengkapan paket sewa..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+          </div>
+
+          <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-lg shadow-md transition-all">
+            <i class="fa-solid fa-plus mr-1"></i> Publikasikan Barang
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- VIEW 4: PROFIL & IDENTITAS -->
+    <section id="view-profile" class="hidden max-w-2xl mx-auto space-y-6">
+      <!-- Profile Card -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 text-center relative overflow-hidden">
+        <div class="w-full h-24 bg-gradient-to-r from-indigo-500 to-purple-600 absolute top-0 left-0"></div>
+        <div class="relative z-10 pt-8">
+          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80" alt="Avatar" class="w-20 h-20 rounded-full border-4 border-white object-cover mx-auto shadow-md">
+          <h3 class="text-xl font-bold text-slate-800 mt-2">Bintang Rahmadani</h3>
+          <p class="text-xs text-slate-500">Mahasiswa Sistem Informasi - UNESA</p>
+          
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold mt-3 border border-emerald-200">
+            <i class="fa-solid fa-shield-check text-emerald-600"></i> Identitas Terverifikasi (KTP & KTM)
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 mt-6 pt-6 border-t border-slate-100">
+          <div>
+            <span class="block text-lg font-bold text-indigo-600">4.9 ★</span>
+            <span class="text-[11px] text-slate-400 font-medium">Rating Pemberi Sewa</span>
+          </div>
+          <div>
+            <span class="block text-lg font-bold text-slate-800">12</span>
+            <span class="text-[11px] text-slate-400 font-medium">Transaksi Berhasil</span>
+          </div>
+          <div>
+            <span class="block text-lg font-bold text-emerald-600">100%</span>
+            <span class="text-[11px] text-slate-400 font-medium">Barang Kembali Aman</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Identity Verification Details -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-4">
+        <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-id-card text-indigo-600"></i> Keamanan Identitas & Sistem Verifikasi
+        </h4>
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2 text-xs">
+          <div class="flex justify-between items-center">
+            <span class="text-slate-600">Verifikasi NIK (KTP):</span>
+            <span class="font-bold text-emerald-600 flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Terverifikasi Dukcapil</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-600">Verifikasi NIM (KTM Kampus):</span>
+            <span class="font-bold text-emerald-600 flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Terverifikasi PDDikti</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-600">Deposit Jaminan Keamanan:</span>
+            <span class="font-bold text-slate-700">Aktif (Sistem Rekening Bersama)</span>
+          </div>
+        </div>
+        <p class="text-[11px] text-slate-400 italic">Sistem informasi PinjamSebaya menjamin keamanan pemilik barang melalui validasi identitas ganda dan enkripsi data pribadi.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: MAP GEOLOCATION SIMULATOR -->
+  <div id="mapModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+      <div class="p-4 bg-indigo-900 text-white flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-map-location-dot text-emerald-400 text-lg"></i>
+          <div>
+            <h3 class="font-bold text-sm leading-none">Peta Sebaran Barang Terdekat</h3>
+            <span class="text-[10px] text-indigo-200">Menampilkan alat yang siap disewa di radius 2 KM</span>
+          </div>
+        </div>
+        <button onclick="toggleMapModal()" class="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs text-white">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- MAP GRAPHICAL MOCKUP -->
+      <div class="relative flex-1 min-h-[350px] bg-slate-200 overflow-hidden flex items-center justify-center">
+        <!-- Mock Map Background Styling -->
+        <div class="absolute inset-0 bg-[#e5e9f0] opacity-80" style="background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px); background-size: 24px 24px;"></div>
+        
+        <!-- Simulated Roads -->
+        <div class="absolute w-full h-8 bg-white/80 top-1/2 -translate-y-1/2 -rotate-12 border-y-2 border-slate-300"></div>
+        <div class="absolute h-full w-8 bg-white/80 left-1/3 -translate-x-1/2 border-x-2 border-slate-300"></div>
+
+        <!-- Campus Center Marker -->
+        <div class="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 z-10 flex flex-col items-center">
+          <span class="px-2 py-0.5 bg-slate-800 text-white text-[9px] font-bold rounded-md shadow-md mb-1">Lokasi Kamu (Kampus)</span>
+          <div class="w-4 h-4 bg-indigo-600 rounded-full border-2 border-white animate-ping"></div>
+        </div>
+
+        <!-- Interactive Pins -->
+        <div onclick="selectPin(1)" class="absolute top-1/3 left-1/4 cursor-pointer group flex flex-col items-center z-20">
+          <div class="bg-white text-slate-800 text-[10px] font-bold px-2 py-1 rounded-lg shadow-md border border-slate-200 group-hover:scale-110 transition-transform">
+            🥼 Jas Lab (0.2 km)
+          </div>
+          <div class="w-3 h-3 bg-red-500 rotate-45 -mt-1"></div>
+        </div>
+
+        <div onclick="selectPin(2)" class="absolute bottom-1/4 right-1/3 cursor-pointer group flex flex-col items-center z-20">
+          <div class="bg-white text-slate-800 text-[10px] font-bold px-2 py-1 rounded-lg shadow-md border border-slate-200 group-hover:scale-110 transition-transform">
+            🛠️ Bor Listrik (0.5 km)
+          </div>
+          <div class="w-3 h-3 bg-red-500 rotate-45 -mt-1"></div>
+        </div>
+
+        <div onclick="selectPin(3)" class="absolute top-1/4 right-1/4 cursor-pointer group flex flex-col items-center z-20">
+          <div class="bg-white text-slate-800 text-[10px] font-bold px-2 py-1 rounded-lg shadow-md border border-slate-200 group-hover:scale-110 transition-transform">
+            📹 Proyektor HD (0.8 km)
+          </div>
+          <div class="w-3 h-3 bg-red-500 rotate-45 -mt-1"></div>
+        </div>
+      </div>
+
+      <div class="p-3 bg-white border-t border-slate-200 text-center text-xs text-slate-500">
+        Klik salah satu pin di atas untuk melihat detail barang terdekat.
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ITEM DETAIL & TRANSACTION RENTAL -->
+  <div id="rentalModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+      <!-- Header Image -->
+      <div class="relative h-44 bg-slate-100 flex items-center justify-center p-2">
+        <img id="modalImg" src="" alt="Detail" class="max-h-full max-w-full object-contain">
+        <button onclick="closeRentalModal()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-900/60 text-white flex items-center justify-center text-xs hover:bg-slate-900">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <span id="modalCategory" class="absolute bottom-3 left-3 px-2.5 py-1 bg-indigo-600 text-white text-[10px] font-bold rounded-md"></span>
+      </div>
+
+      <!-- Content Body -->
+      <div class="p-5 overflow-y-auto space-y-4">
+        <div>
+          <h3 id="modalTitle" class="text-xl font-bold text-slate-800"></h3>
+          <p id="modalLocation" class="text-xs text-slate-500 flex items-center gap-1 mt-1">
+            <i class="fa-solid fa-location-dot text-indigo-500"></i> <span></span>
+          </p>
+        </div>
+
+        <!-- Owner Card -->
+        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
+          <div class="flex items-center gap-2.5">
+            <img id="modalOwnerImg" src="" class="w-9 h-9 rounded-full object-cover border border-slate-300">
+            <div>
+              <span id="modalOwnerName" class="block text-xs font-bold text-slate-800"></span>
+              <span class="text-[10px] text-emerald-600 font-semibold flex items-center gap-0.5">
+                <i class="fa-solid fa-circle-check"></i> KTP & KTM Terverifikasi
+              </span>
+            </div>
+          </div>
+          <span class="text-[11px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded">⭐ 4.9</span>
+        </div>
+
+        <p id="modalDesc" class="text-xs text-slate-600 leading-relaxed"></p>
+
+        <!-- Rent Duration Calculator -->
+        <div class="p-3 bg-indigo-50/70 rounded-xl border border-indigo-100 space-y-3">
+          <div class="flex justify-between items-center text-xs">
+            <span class="font-bold text-indigo-900">Durasi Penyewaan (Hari):</span>
+            <div class="flex items-center gap-2">
+              <button onclick="updateDays(-1)" class="w-6 h-6 rounded bg-indigo-200 text-indigo-800 font-bold flex items-center justify-center hover:bg-indigo-300">-</button>
+              <span id="rentDays" class="font-bold text-sm w-4 text-center">1</span>
+              <button onclick="updateDays(1)" class="w-6 h-6 rounded bg-indigo-200 text-indigo-800 font-bold flex items-center justify-center hover:bg-indigo-300">+</button>
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center pt-2 border-t border-indigo-200/60">
+            <span class="text-xs text-indigo-800">Total Biaya Sewa:</span>
+            <span id="totalPriceDisplay" class="text-base font-extrabold text-indigo-700">Rp 0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Action -->
+      <div class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
+        <div>
+          <span class="block text-[10px] text-slate-400 font-medium">Jaminan Keamanan</span>
+          <span class="text-xs font-bold text-slate-700">Verifikasi Otomatis</span>
+        </div>
+        <button onclick="confirmRental()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5">
+          <i class="fa-solid fa-paper-plane"></i> Ajukan Pinjaman Sekarang
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // DATA BARANG DUMMY (Menggunakan Gambar Proyektor Epson)
+    let items = [
+      {
+        id: 1,
+        title: "Jas Lab Kimia / Biologi Ukuran L",
+        category: "Alat Kuliah",
+        price: 60000,
+        location: "Kapasari / Dekat Kampus UNESA (0.2 km)",
+        img: "https://down-id.img.susercontent.com/file/id-11134207-7r98v-lz4x3zair65739",
+        desc: "Kondisi bersih, wangi, sudah dilaundry. Cocok untuk mahasiswa yang ada praktikum 1 hari tanpa perlu beli baru ratusan ribu.",
+        owner: "Siti Sarah (SI '23)",
+        ownerImg: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80"
+      },
+      {
+        id: 2,
+        title: "Bor Listrik Cordless 12V + Mata Bor Complete",
+        category: "Perkakas",
+        price: 25000,
+        location: "Ketintang Permai (0.5 km)",
+        img: "https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=800&q=80",
+        desc: "Bor baterai praktis untuk pasang pigura, rak dinding, atau tugas maket arsitektur/teknik. Baterai tahan lama & lengkap dengan casing.",
+        owner: "Mas Dimas (Warga RT 04)",
+        ownerImg: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80"
+      },
+      {
+        id: 3,
+        title: "Kamera Mirrorless Sony A6000",
+        category: "Elektronik",
+        price: 85000,
+        location: "Ketintang Permai (0.5 km)",
+        img: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=764&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+        desc: "Kamera mirrorless Sony A6000 dengan kualitas gambar yang tinggi dan desain compact. Cocok untuk fotografi sehari-hari dan video pendek.",
+        owner: "Ongie (Mahasiswa DKV '26)",
+        ownerImg: "https://plus.unsplash.com/premium_photo-1679064458881-76904cf6d1aa?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D"
+      },
+    
+    ];
+
+    let userRentals = [
+      {
+        id: 101,
+        title: "Kamera Mirrorless Sony A6000",
+        price: 85000,
+        days: 2,
+        status: "Sedang Dipinjam",
+        returnDate: "Hari Ini, 20:00 WIB"
+      }
+    ];
+
+    let currentSelectedItem = null;
+    let selectedDays = 1;
+
+    // INITIAL RENDER
+    document.addEventListener("DOMContentLoaded", () => {
+      renderItems(items);
+      renderRentals();
+    });
+
+    // RENDER ITEMS GRID
+    function renderItems(data) {
+      const container = document.getElementById("itemsContainer");
+      container.innerHTML = "";
+
+      if(data.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full py-12 text-center text-slate-400 text-xs">
+            <i class="fa-solid fa-box-open text-3xl mb-2"></i>
+            <p>Barang tidak ditemukan. Coba pencarian lain.</p>
+          </div>
+        `;
+        return;
+      }
+
+      data.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group";
+        card.innerHTML = `
+          <div>
+            <div class="relative h-40 overflow-hidden bg-slate-50 flex items-center justify-center p-2">
+              <img src="${item.img}" alt="${item.title}" class="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300">
+              <span class="absolute top-2.5 left-2.5 bg-white/90 backdrop-blur-md text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-200">${item.category}</span>
+            </div>
+            <div class="p-4 space-y-2">
+              <h4 class="font-bold text-slate-800 text-sm line-clamp-1">${item.title}</h4>
+              <p class="text-[11px] text-slate-500 flex items-center gap-1">
+                <i class="fa-solid fa-location-dot text-indigo-500"></i> ${item.location}
+              </p>
+              <p class="text-[11px] text-slate-600 line-clamp-2 mt-1 leading-relaxed">${item.desc}</p>
+            </div>
+          </div>
+
+          <div class="p-4 pt-0 flex items-center justify-between border-t border-slate-100 mt-2">
+            <div>
+              <span class="text-[10px] text-slate-400 font-medium block">Sewa / hari</span>
+              <span class="text-sm font-extrabold text-indigo-600">Rp ${item.price.toLocaleString('id-ID')}</span>
+            </div>
+            <button onclick="openRentalModal(${item.id})" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg shadow-sm transition-all">
+              Sewa
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // RENDER USER RENTALS
+    function renderRentals() {
+      const container = document.getElementById("activeRentalsList");
+      const countBadge = document.getElementById("activeCount");
+      countBadge.innerText = userRentals.length;
+
+      container.innerHTML = "";
+      if(userRentals.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 italic">Belum ada pinjaman aktif saat ini.</p>`;
+        return;
+      }
+
+      userRentals.forEach(r => {
+        const item = document.createElement("div");
+        item.className = "bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between gap-4";
+        item.innerHTML = `
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-base">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+            <div>
+              <h4 class="font-bold text-sm text-slate-800">${r.title}</h4>
+              <span class="text-[11px] text-slate-500">Batas pengembalian: <b class="text-slate-700">${r.returnDate}</b></span>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="inline-block px-2 py-0.5 bg-emerald-100 text-emerald-800 font-bold text-[10px] rounded-full mb-1">${r.status}</span>
+            <span class="block text-xs font-extrabold text-slate-700">Rp ${(r.price * r.days).toLocaleString('id-ID')}</span>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    // SEARCH & FILTER
+    function handleSearch() {
+      const q = document.getElementById("searchInput").value.toLowerCase();
+      const filtered = items.filter(i => i.title.toLowerCase().includes(q) || i.category.toLowerCase().includes(q));
+      renderItems(filtered);
+    }
+    function handleSearchMobile() {
+      const q = document.getElementById("searchInputMobile").value.toLowerCase();
+      const filtered = items.filter(i => i.title.toLowerCase().includes(q) || i.category.toLowerCase().includes(q));
+      renderItems(filtered);
+    }
+
+    function filterCategory(cat) {
+      document.querySelectorAll(".cat-btn").forEach(btn => {
+        btn.classList.remove("bg-indigo-100", "text-indigo-700", "border-indigo-200");
+        btn.classList.add("bg-white", "text-slate-600", "border-slate-200");
+      });
+      event.target.classList.remove("bg-white", "text-slate-600");
+      event.target.classList.add("bg-indigo-100", "text-indigo-700", "border-indigo-200");
+
+      if(cat === 'All') {
+        renderItems(items);
+      } else {
+        renderItems(items.filter(i => i.category === cat));
+      }
+    }
+
+    // NAVIGATION TABS
+    function switchTab(tab) {
+      document.querySelectorAll("main > section").forEach(s => s.classList.add("hidden"));
+      document.querySelectorAll(".tab-btn").forEach(b => {
+        b.classList.remove("bg-indigo-600", "text-white", "shadow-sm");
+        b.classList.add("text-slate-600", "hover:bg-slate-100");
+      });
+
+      document.getElementById(`view-${tab}`).classList.remove("hidden");
+      const activeBtn = document.getElementById(`tab-${tab}`);
+      activeBtn.classList.remove("text-slate-600", "hover:bg-slate-100");
+      activeBtn.classList.add("bg-indigo-600", "text-white", "shadow-sm");
+    }
+
+    // MODAL RENTAL DETAILS
+    function openRentalModal(id) {
+      currentSelectedItem = items.find(i => i.id === id);
+      selectedDays = 1;
+
+      document.getElementById("modalTitle").innerText = currentSelectedItem.title;
+      document.getElementById("modalCategory").innerText = currentSelectedItem.category;
+      document.getElementById("modalLocation").querySelector("span").innerText = currentSelectedItem.location;
+      document.getElementById("modalImg").src = currentSelectedItem.img;
+      document.getElementById("modalDesc").innerText = currentSelectedItem.desc;
+      document.getElementById("modalOwnerName").innerText = currentSelectedItem.owner;
+      document.getElementById("modalOwnerImg").src = currentSelectedItem.ownerImg;
+
+      updatePriceCalculation();
+      document.getElementById("rentalModal").classList.remove("hidden");
+    }
+
+    function closeRentalModal() {
+      document.getElementById("rentalModal").classList.add("hidden");
+    }
+
+    function updateDays(delta) {
+      if(selectedDays + delta >= 1) {
+        selectedDays += delta;
+        document.getElementById("rentDays").innerText = selectedDays;
+        updatePriceCalculation();
+      }
+    }
+
+    function updatePriceCalculation() {
+      if(!currentSelectedItem) return;
+      const total = currentSelectedItem.price * selectedDays;
+      document.getElementById("totalPriceDisplay").innerText = `Rp ${total.toLocaleString('id-ID')}`;
+    }
+
+    function confirmRental() {
+      if(!currentSelectedItem) return;
+      userRentals.push({
+        id: Date.now(),
+        title: currentSelectedItem.title,
+        price: currentSelectedItem.price,
+        days: selectedDays,
+        status: "Diproses",
+        returnDate: "Besok, 18:00 WIB"
+      });
+      renderRentals();
+      closeRentalModal();
+      alert("Pengajuan sewa berhasil dikirim! Pemilik barang telah menerima notifikasi verifikasi identitas Anda.");
+      switchTab('rentals');
+    }
+
+    // MODAL MAP
+    function toggleMapModal() {
+      document.getElementById("mapModal").classList.toggle("hidden");
+    }
+
+    function selectPin(id) {
+      toggleMapModal();
+      openRentalModal(id);
+    }
+
+    // ADD ITEM
+    function handleAddItem(e) {
+      e.preventDefault();
+      const newItem = {
+        id: Date.now(),
+        title: document.getElementById("addItemTitle").value,
+        category: document.getElementById("addItemCategory").value,
+        price: parseInt(document.getElementById("addItemPrice").value),
+        location: document.getElementById("addItemLocation").value,
+        img: document.getElementById("addItemImg").value,
+        desc: document.getElementById("addItemDesc").value,
+        owner: "Bintang Rahmadani (Saya)",
+        ownerImg: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80"
+      };
+
+      items.unshift(newItem);
+      renderItems(items);
+      alert("Barang Anda berhasil dipublikasikan di peta lokasi!");
+      switchTab('explore');
+    }
+  </script>
+</body>
+</html>
